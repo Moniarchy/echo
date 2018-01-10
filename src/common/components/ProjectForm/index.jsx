@@ -95,38 +95,20 @@ class ProjectForm extends Component {
         <form id="project" onSubmit={handleSubmit(onSave)}>
           <Field name="projectIdentifier" type="hidden" component="hidden"/>
           <Field
-            name="chapterIdentifier"
-            type="text"
-            icon="home"
-            label="Chapter Name"
-            hint={'e.g. "Oakland"'}
-            component={renderInput}
-            required
-            />
-          <Field
-            name="cycleIdentifier"
-            type="text"
-            icon="access_time"
-            label="Cycle Number"
-            hint={'e.g. "21"'}
-            component={renderInput}
-            required
-            />
-          <Field
-            name="goalIdentifier"
-            type="text"
-            icon="track_changes"
-            label="Goal Number"
-            hint={'e.g. "77"'}
-            component={renderInput}
-            required
-            />
-          <Field
             name="memberIdentifiers"
             type="text"
             icon="people"
             hint={'Separate by commas (e.g. "ltuhura, mrspock, scotty")'}
             label="Member Handles"
+            component={renderInput}
+            required
+            />
+          <Field
+            name="projectURL"
+            type="text"
+            icon="people"
+            hint={'URL for your project discription'}
+            label="Project Description URL"
             component={renderInput}
             required
             />
