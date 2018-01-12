@@ -1,24 +1,18 @@
 import logger from 'src/server/util/logger'
 import findUsers from 'src/server/actions/findUsers'
-// import getChapter from 'src/server/actions/getChapter'
 import saveProject from 'src/server/actions/saveProject'
-import {/* Phase, */getCycleForChapter, getProject} from 'src/server/services/dataService'
-// import {getGoalInfo} from 'src/server/services/goalLibraryService'
+import {getCycleForChapter, getProject} from 'src/server/services/dataService'
 import {LGBadRequestError} from 'src/server/util/error'
 
 export default async function importProject(data = {}) {
-  const {/* chapter, */cycle, project, /* goal, */members, artifactURL/* , phase */} = await _parseProjectInput(data)
+  const {cycle, project, members, artifactURL} = await _parseProjectInput(data)
 
   const projectValues = {
-    // still want chapter and cycle, but not from form:
-    // chapterId: chapter.id,
     cycleId: cycle.id,
-    // phaseId: phase.id,
     phaseId: members[0].phaseId,
     chapterId: members[0].chapterId,
     memberIds: members.map(p => p.id),
     artifactURL
-    // goal,
   }
   if (project) {
     projectValues.id = project.id
@@ -36,25 +30,18 @@ export default async function importProject(data = {}) {
 async function _parseProjectInput(data) {
   const {
     projectIdentifier,
-    // still want chapter and cycle, but not from form:
-    // chapterIdentifier,
-    // cycleIdentifier,
-    // goalIdentifier,
     memberIdentifiers = [],
     artifactURL
   } = data || {}
 
-  const [members/* , chapter */] = await Promise.all([
+  const [members] = await Promise.all([
     _validateMembers(memberIdentifiers),
-    // _validateChapter(chapterIdentifier),
   ])
 
   const cycle = await _validateCycle(members[0].chapterId)
-  // const goal = await _validateGoal(goalIdentifier)
-  // const phase = await _validatePhase(members[0].phaseId, {goal})
-  const project = await _validateProject(projectIdentifier/* , {chapter, cycle} */)
+  const project = await _validateProject(projectIdentifier)
 
-  return {/* chapter, */cycle, project, /* goal, */members, artifactURL/* phase */}
+  return {cycle, project, members, artifactURL}
 }
 
 async function _validateMembers(userIdentifiers = []) {
@@ -85,34 +72,6 @@ async function _validateMembers(userIdentifiers = []) {
   return members
 }
 
-// async function _validateChapter(chapterIdentifier) {
-//   if (!chapterIdentifier) {
-//     throw new LGBadRequestError('Must specify a chapter')
-//   }
-//   const chapter = await getChapter(chapterIdentifier)
-//   if (!chapter) {
-//     throw new LGBadRequestError(`Chapter not found for identifier ${chapterIdentifier}`)
-//   }
-//   return chapter
-// }
-//
-
-// maybe still use validateCycle???
-// async function _validateCycle(cycleIdentifier, {chapter}) {
-//   if (!cycleIdentifier) {
-//     throw new LGBadRequestError('Must specify a cycle')
-//   }
-//   const cycle = await getCycleForChapter(chapter.id, cycleIdentifier)
-//   if (!cycle) {
-//     throw new LGBadRequestError(`Cycle not found for identifier ${cycleIdentifier} in chapter ${chapter.name}`)
-//   }
-//   if (cycle.chapterId !== chapter.id) {
-//     throw new LGBadRequestError(`Cycle ${cycleIdentifier} chapter ID ${cycle.chapterId} does not match chapter ${chapter.name} ID ${chapter.id}`)
-//   }
-//   return cycle
-// }
-
-// validateCycle using just chapter from members?
 async function _validateCycle(chapter) {
   if (!chapter) {
     throw new LGBadRequestError('Must specify a cycle')
@@ -126,28 +85,6 @@ async function _validateCycle(chapter) {
   }
   return cycle
 }
-
-// async function _validateGoal(goalIdentifier) {
-//   if (!goalIdentifier) {
-//     throw new LGBadRequestError('Must specify a goal')
-//   }
-//   const goalNumber = parseInt(goalIdentifier, 10)
-//   const goal = await getGoalInfo(goalNumber)
-//   if (!goal) {
-//     throw new LGBadRequestError(`Goal not found with identifier: ${goalIdentifier}`)
-//   }
-//   return goal
-// }
-//
-// async function _validatePhase(phaseId, {goal}) {
-//   const phase = await Phase.get(phaseId)
-//   if (isFinite(goal.phase) && goal.phase !== phase.number) {
-//     throw new LGBadRequestError(
-//       `Goal ${goal.number} is a Phase ${goal.phase} project and cannot be linked to a project in Phase ${phase.number}.`
-//     )
-//   }
-//   return phase
-// }
 
 async function _validateProject(projectIdentifier, {chapter, cycle}) {
   let project
