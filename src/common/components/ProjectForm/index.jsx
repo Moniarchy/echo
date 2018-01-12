@@ -104,10 +104,9 @@ class ProjectForm extends Component {
             required
             />
           <Field
-            name="artifactURL"
+            name="descriptionURL"
             type="text"
-            icon="people"
-            hint={'URL for your project discription'}
+            hint={'URL for your project description'}
             label="Project Description URL"
             component={renderInput}
             required

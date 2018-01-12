@@ -1,18 +1,18 @@
 import logger from 'src/server/util/logger'
 import findUsers from 'src/server/actions/findUsers'
 import saveProject from 'src/server/actions/saveProject'
-import {getCycleForChapter, getProject} from 'src/server/services/dataService'
+import {getChapter, getCycleForChapter, getProject} from 'src/server/services/dataService'
 import {LGBadRequestError} from 'src/server/util/error'
 
 export default async function importProject(data = {}) {
-  const {cycle, project, members, artifactURL} = await _parseProjectInput(data)
+  const {chapter, cycle, project, members, descriptionURL} = await _parseProjectInput(data)
 
   const projectValues = {
     cycleId: cycle.id,
     phaseId: members[0].phaseId,
-    chapterId: members[0].chapterId,
+    chapterId: chapter.id,
     memberIds: members.map(p => p.id),
-    artifactURL
+    descriptionURL,
   }
   if (project) {
     projectValues.id = project.id
@@ -31,17 +31,18 @@ async function _parseProjectInput(data) {
   const {
     projectIdentifier,
     memberIdentifiers = [],
-    artifactURL
+    descriptionURL,
   } = data || {}
 
   const [members] = await Promise.all([
     _validateMembers(memberIdentifiers),
   ])
 
-  const cycle = await _validateCycle(members[0].chapterId)
-  const project = await _validateProject(projectIdentifier)
+  const chapter = getChapter(members[0].chapterId)
+  const cycle = getCycleForChapter(chapter.id)
+  const project = await _validateProject(projectIdentifier, {chapter, cycle})
 
-  return {cycle, project, members, artifactURL}
+  return {chapter, cycle, project, members, descriptionURL}
 }
 
 async function _validateMembers(userIdentifiers = []) {
@@ -70,20 +71,6 @@ async function _validateMembers(userIdentifiers = []) {
   }
 
   return members
-}
-
-async function _validateCycle(chapter) {
-  if (!chapter) {
-    throw new LGBadRequestError('Must specify a cycle')
-  }
-  const cycle = await getCycleForChapter(chapter)
-  if (!cycle) {
-    throw new LGBadRequestError(`Cycle not found for chapter ${chapter}`)
-  }
-  if (cycle.chapterId !== chapter) {
-    throw new LGBadRequestError(`Cycle's chapter ID ${cycle.chapterId} does not match chapter ${chapter.name} ID ${chapter.id}`)
-  }
-  return cycle
 }
 
 async function _validateProject(projectIdentifier, {chapter, cycle}) {
