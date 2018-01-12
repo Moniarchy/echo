@@ -5,10 +5,8 @@ export default new GraphQLInputObjectType({
   name: 'ProjectImport',
   description: 'Project import values',
   fields: () => ({
-    chapterIdentifier: {type: new GraphQLNonNull(GraphQLString), description: 'The chapter identifier'},
-    cycleIdentifier: {type: new GraphQLNonNull(GraphQLString), description: 'The cycle identifier'},
     projectIdentifier: {type: GraphQLString, description: 'The project identifier'},
-    goalIdentifier: {type: GraphQLInt, description: 'The goal identifier'},
+    artifactURL: {type: GraphQLString, description: 'The project URL'},
     memberIdentifiers: {type: new GraphQLList(GraphQLString), description: 'The identifiers of the project members'},
   }),
 })
