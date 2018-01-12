@@ -1,22 +1,23 @@
 import logger from 'src/server/util/logger'
 import findUsers from 'src/server/actions/findUsers'
-import getChapter from 'src/server/actions/getChapter'
+// import getChapter from 'src/server/actions/getChapter'
 import saveProject from 'src/server/actions/saveProject'
 import {/* Phase, */getCycleForChapter, getProject} from 'src/server/services/dataService'
 // import {getGoalInfo} from 'src/server/services/goalLibraryService'
 import {LGBadRequestError} from 'src/server/util/error'
 
 export default async function importProject(data = {}) {
-  const {/*chapter, cycle, */ project, /* goal, */members, artifactURL/* , phase */} = await _parseProjectInput(data)
+  const {/* chapter, */cycle, project, /* goal, */members, artifactURL/* , phase */} = await _parseProjectInput(data)
 
   const projectValues = {
-    //still want chapter and cycle, but not from form:
+    // still want chapter and cycle, but not from form:
     // chapterId: chapter.id,
-    // cycleId: cycle.id,
+    cycleId: cycle.id,
     // phaseId: phase.id,
     phaseId: members[0].phaseId,
     chapterId: members[0].chapterId,
     memberIds: members.map(p => p.id),
+    artifactURL
     // goal,
   }
   if (project) {
@@ -35,7 +36,7 @@ export default async function importProject(data = {}) {
 async function _parseProjectInput(data) {
   const {
     projectIdentifier,
-    //still want chapter and cycle, but not from form:
+    // still want chapter and cycle, but not from form:
     // chapterIdentifier,
     // cycleIdentifier,
     // goalIdentifier,
@@ -43,17 +44,17 @@ async function _parseProjectInput(data) {
     artifactURL
   } = data || {}
 
-  const [members/*, chapter*/] = await Promise.all([
+  const [members/* , chapter */] = await Promise.all([
     _validateMembers(memberIdentifiers),
     // _validateChapter(chapterIdentifier),
   ])
 
-  // const cycle = await _validateCycle(cycleIdentifier, {chapter})
+  const cycle = await _validateCycle(members[0].chapterId)
   // const goal = await _validateGoal(goalIdentifier)
   // const phase = await _validatePhase(members[0].phaseId, {goal})
-  const project = await _validateProject(projectIdentifier, {chapter, cycle})
+  const project = await _validateProject(projectIdentifier/* , {chapter, cycle} */)
 
-  return {/* chapter, cycle, */ project, /* goal, */ members, artifactURL/* phase */}
+  return {/* chapter, */cycle, project, /* goal, */members, artifactURL/* phase */}
 }
 
 async function _validateMembers(userIdentifiers = []) {
@@ -95,16 +96,33 @@ async function _validateMembers(userIdentifiers = []) {
 //   return chapter
 // }
 //
-async function _validateCycle(cycleIdentifier, {chapter}) {
-  if (!cycleIdentifier) {
+
+// maybe still use validateCycle???
+// async function _validateCycle(cycleIdentifier, {chapter}) {
+//   if (!cycleIdentifier) {
+//     throw new LGBadRequestError('Must specify a cycle')
+//   }
+//   const cycle = await getCycleForChapter(chapter.id, cycleIdentifier)
+//   if (!cycle) {
+//     throw new LGBadRequestError(`Cycle not found for identifier ${cycleIdentifier} in chapter ${chapter.name}`)
+//   }
+//   if (cycle.chapterId !== chapter.id) {
+//     throw new LGBadRequestError(`Cycle ${cycleIdentifier} chapter ID ${cycle.chapterId} does not match chapter ${chapter.name} ID ${chapter.id}`)
+//   }
+//   return cycle
+// }
+
+// validateCycle using just chapter from members?
+async function _validateCycle(chapter) {
+  if (!chapter) {
     throw new LGBadRequestError('Must specify a cycle')
   }
-  const cycle = await getCycleForChapter(chapter.id, cycleIdentifier)
+  const cycle = await getCycleForChapter(chapter)
   if (!cycle) {
-    throw new LGBadRequestError(`Cycle not found for identifier ${cycleIdentifier} in chapter ${chapter.name}`)
+    throw new LGBadRequestError(`Cycle not found for chapter ${chapter}`)
   }
-  if (cycle.chapterId !== chapter.id) {
-    throw new LGBadRequestError(`Cycle ${cycleIdentifier} chapter ID ${cycle.chapterId} does not match chapter ${chapter.name} ID ${chapter.id}`)
+  if (cycle.chapterId !== chapter) {
+    throw new LGBadRequestError(`Cycle's chapter ID ${cycle.chapterId} does not match chapter ${chapter.name} ID ${chapter.id}`)
   }
   return cycle
 }
